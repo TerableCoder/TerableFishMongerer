@@ -5,17 +5,6 @@ module.exports = function TerableFishMongerer(mod) {
     let id = 0,
         dfa = 0;
 		
-	function hook(){ hooks.push(mod.hook(...arguments)); }
-	
-	function unload(){
-		enabled = false;
-		if(hooks.length){
-			for (let h of hooks)
-				mod.unhook(h);
-			hooks = [];
-		}
-	}
-	
 	cmd.add(['terafm', 'tfm'], {
         $default(fishTier){
             let fish = [];
