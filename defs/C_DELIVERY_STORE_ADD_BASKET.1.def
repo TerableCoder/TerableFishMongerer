@@ -1,0 +1,5 @@
+int32 id # from S_REQUEST_CONTRACT
+int32 unk1 # 0
+int32 slot # inventory slot
+int32 fishId # item.id
+int32 amount # 1

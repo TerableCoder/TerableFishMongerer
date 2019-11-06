@@ -1,0 +1,6 @@
+int32 id # from S_REQUEST_CONTRACT
+int32 type # 1000 E8030000
+int32 unk2 # 3 NA 6 EU
+int32 unk3 # 62
+int32 devlierableFishAmount # how many you can still deliver, example 30
+int32 unk4 # 6

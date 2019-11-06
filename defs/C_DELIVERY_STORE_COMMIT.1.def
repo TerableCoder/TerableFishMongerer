@@ -1,0 +1,2 @@
+int32 id # from S_REQUEST_CONTRACT
+int32 type # 1000 E8030000
