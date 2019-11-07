@@ -1,14 +1,21 @@
 module.exports = function TerableFishMongerer(mod) {
 	const cmd = mod.command || mod.require.command;
     mod.game.initialize('inventory');
-	
+
     let id = 0,
-        dfa = 0;
-		
+        fish = [],
+        fishToSell = [],
+        numToSell = 0,
+        delay = 0,
+        enabled = false,
+        fishSold = 0,
+        ft = 0;
+
 	cmd.add(['terafm', 'tfm'], {
         $default(fishTier){
-            let fish = [];
-            let fishToSell = [];
+            ft = fishTier;
+            fish = [];
+            fishToSell = [];
             switch(fishTier){
                 case "baf":
                     fish = [206500, 206501, 206502, 206503, 206504, 206505, 206506, 206507, 206508, 206509];
@@ -45,41 +52,49 @@ module.exports = function TerableFishMongerer(mod) {
                     break;
             }
             mod.game.inventory.findAllInBagOrPockets(fish).forEach(item => { // find fish of tier fishTier
-                fishToSell.push({ "id": id,  "unk1": 0, "slot": item.slot, "fishId": item.id, "amount": 1});
+                fishToSell.push({ "id": 0,  "unk1": 0, "slot": item.slot, "fishId": item.id, "amount": 1});
             });
             fishToSell.sort(function (a, b){
                 return Number(a.slot) - Number(b.slot);
             });
-            const numToSell = Math.min(fishToSell.length, dfa);
-            let j = 0;
-            let delay = 0;
-            for(let i = 0; i < numToSell; i++){
-                mod.setTimeout(() => {
-                    mod.send('C_DELIVERY_STORE_ADD_BASKET', 1, fishToSell[i]);
-                }, delay);
-                delay += 100;
-                j++;
-                if(j == 8){
-                    delay += 100;
-                    mod.setTimeout(() => {
-                        mod.send('C_DELIVERY_STORE_COMMIT', 1, { "id": id, "type": 1000 });
-                    }, delay);
-                    j = 0;
-                    delay += 200;
-                }
+            numToSell = 0;
+            delay = 300;
+            if(enabled){
+                cmd.message("Currently Running. Please try again in a few seconds.");
+                return;
+            } else{
+                cmd.message(`Mongering Tier ${ft} fishes.`);
+                enabled = true;
+                fishSold = 0;
             }
-            if(j != 0){
-                mod.setTimeout(() => {
-                    mod.send('C_DELIVERY_STORE_COMMIT', 1, { "id": id, "type": 1000 });
-                }, delay);
-            }
-
-            cmd.message(`${numToSell} Tier ${fishTier} fishes mongered.`);
         }
 	});
-	
+
 	mod.hook('S_DELIVERY_STORE_ITEM', 1, (event) => {
-        id = event.id;
-        dfa = event.devlierableFishAmount;
+        if(enabled && numToSell == 0){ // find out how many fish to sell and trim array to that size
+            numToSell = Math.min(fishToSell.length, event.devlierableFishAmount);
+            fishToSell.slice(numToSell);
+        }
+
+        if(numToSell > fishSold && enabled){
+            for (let item of fishToSell.slice(0, 8)){
+                item.id = event.id;
+                mod.setTimeout(() => {
+                    mod.send('C_DELIVERY_STORE_ADD_BASKET', 1, item);
+                }, delay);
+                delay += 200;
+                fishSold++;
+            }
+            fishToSell = fishToSell.slice(8);
+            mod.setTimeout(() => {
+                mod.send('C_DELIVERY_STORE_COMMIT', 1, { "id": event.id, "type": 1000 });
+            }, delay+200);
+        }
+        if(numToSell <= fishSold && enabled){
+            mod.setTimeout(() => {
+                cmd.message(`${fishSold} Tier ${ft} fishes mongered.`);
+            }, delay+250);
+            enabled = false;
+        }
     });
 }
