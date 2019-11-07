@@ -2,8 +2,7 @@ module.exports = function TerableFishMongerer(mod) {
 	const cmd = mod.command || mod.require.command;
     mod.game.initialize('inventory');
 
-    let id = 0,
-        fish = [],
+    let fish = [],
         fishToSell = [],
         numToSell = 0,
         delay = 0,
